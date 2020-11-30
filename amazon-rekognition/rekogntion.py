@@ -1,41 +1,45 @@
 import csv
 import boto3
+# settings.py
+import settings
+import os
 
-photo = 'face_to_find.jpg'
-target_to_compare ='photo_target_without_face.jpg'
-
-with open('credentials.csv', 'r') as input:
-    next(input)
-    reader = csv.reader(input)
-    for line in reader:
-        access_key_id = line[2]
-        secret_access_key = line[3]
+NAME_PHOTO_TO_SEARCH = 'face_to_find.jpg'
+NAME_PHOTO_TARGET_TO_COMPARE = 'photo_target_with_face.jpg'
 
 
-client = boto3.client('rekognition',
-                      aws_access_key_id=access_key_id,
-                      aws_secret_access_key=secret_access_key,
-                      region_name="us-east-2")
-
-with open(photo, 'rb') as source_image:
-    source_bytes = source_image.read()
+class CompareFaces:
     
-with open(target_to_compare,'rb') as target_to_compare:
-    target_photo_bytes = target_to_compare.read()
+    def __init__(self):
+        self.clientBoto3Amazon = self.__getClientToConnectWithAmazon()
 
-response = client.compare_faces(
-    SourceImage={'Bytes': source_bytes},
-    TargetImage={'Bytes': target_photo_bytes}
-)
+    def detectIfFaceTargetExistWhenComparePhotos(self):
+        photo_to_search_in_bytes = self.__getImageInBytesFormat(NAME_PHOTO_TO_SEARCH)
+        target_photo_bytes = self.__getImageInBytesFormat(NAME_PHOTO_TARGET_TO_COMPARE)
+        response = self.clientBoto3Amazon.compare_faces(
+            SourceImage={'Bytes': photo_to_search_in_bytes},
+            TargetImage={'Bytes': target_photo_bytes}
+        )
+        for key, value in response.items():
+            if key in ('FaceMatches'):
+                if (len(value) > 0):
+                    print("Se detecto el rostro al comparar")
+                    print("-----------------------")
+                    for att in value:
+                        print("Similitud:" + str(att['Similarity']) + "%")
+                else:
+                    print("No se encontro el rostro")          
 
-for key, value in response.items():
-    if key in ('FaceMatches'):
-        print("hee"+key)
-        print(len(value))
-        if (len(value)>0):
-            print("Si existe foto")
-        else:
-            print("No")    
-        #for att in value:
-           # print(att)
-#print(response)
+    def __getImageInBytesFormat(self, nameImage):
+        with open(nameImage, 'rb') as source_image:
+            return source_image.read()  
+
+    def __getClientToConnectWithAmazon(self):
+        return boto3.client('rekognition',
+                      aws_access_key_id=os.getenv("ACCESS_KEY_ID"),
+                      aws_secret_access_key=os.getenv("SECRET_ACCESS_KEY"),
+                      region_name="us-east-2")             
+
+obj = CompareFaces()
+obj.detectIfFaceTargetExistWhenComparePhotos()
+
