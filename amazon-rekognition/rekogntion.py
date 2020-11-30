@@ -12,6 +12,13 @@ class CompareFaces:
     
     def __init__(self):
         self.clientBoto3Amazon = self.__getClientToConnectWithAmazon()
+    
+    
+    def __getClientToConnectWithAmazon(self):
+        return boto3.client('rekognition',
+                      aws_access_key_id=os.getenv("ACCESS_KEY_ID"),
+                      aws_secret_access_key=os.getenv("SECRET_ACCESS_KEY"),
+                      region_name="us-east-2")            
 
     def detectIfFaceTargetExistWhenComparePhotos(self):
         photo_to_search_in_bytes = self.__getImageInBytesFormat(NAME_PHOTO_TO_SEARCH)
@@ -33,12 +40,7 @@ class CompareFaces:
     def __getImageInBytesFormat(self, nameImage):
         with open(nameImage, 'rb') as source_image:
             return source_image.read()  
-
-    def __getClientToConnectWithAmazon(self):
-        return boto3.client('rekognition',
-                      aws_access_key_id=os.getenv("ACCESS_KEY_ID"),
-                      aws_secret_access_key=os.getenv("SECRET_ACCESS_KEY"),
-                      region_name="us-east-2")             
+         
 
 obj = CompareFaces()
 obj.detectIfFaceTargetExistWhenComparePhotos()
